@@ -1,8 +1,8 @@
 """
-artirma.py
-----------
+veri_artirma.py
+---------------
 Basit veri artırma (data augmentation) fonksiyonları.
-Bu modül, ön işlenmiş görüntüler üzerine dönüşler, yansıtma ve küçük parlaklık/kontrast değişimleri uygular.
+Bu modül, ön işlenmiş görüntüler üzerine döner, yansıtma ve küçük parlaklık/kontrast değişimleri uygular.
 """
 
 import numpy as np
@@ -19,7 +19,7 @@ def dikey_ayna(goruntu: np.ndarray) -> np.ndarray:
     return np.flipud(goruntu)
 
 
-def rastgele_dondur(goruntu: np.ndarray) -> np.ndarray:
+def rastgele_dondurme(goruntu: np.ndarray) -> np.ndarray:
     """
     Görüntüyü 0, 90, 180 veya 270 derece rastgele döndürür.
     """
@@ -35,15 +35,15 @@ def rastgele_dondur(goruntu: np.ndarray) -> np.ndarray:
         return np.rot90(goruntu, k=3)
 
 
-def parlaklik_kontrast_oyna(goruntu: np.ndarray,
-                            parlaklik_aralik=(-20, 20),
-                            kontrast_aralik=(0.9, 1.1)) -> np.ndarray:
+def parlaklik_kontrast_degistirme(goruntu: np.ndarray,
+                                   parlaklik_aralik=(-20, 20),
+                                   kontrast_aralik=(0.9, 1.1)) -> np.ndarray:
     """
     Parlaklık ve kontrast değerleriyle küçük rastgele değişiklikler yapar.
     Girdi ve çıktı uint8 [0,255] varsayılır.
     """
-    b = random.uniform(*parlaklik_aralik)  # bias
-    c = random.uniform(*kontrast_aralik)   # gain
+    b = random.uniform(*parlaklik_aralik)  # önyargı
+    c = random.uniform(*kontrast_aralik)   # kazanç
 
     goruntu_float = goruntu.astype("float32")
     degismis = goruntu_float * c + b
@@ -64,10 +64,10 @@ def rastgele_artirma_uygula(goruntu: np.ndarray):
     if random.random() < 0.5:
         g = dikey_ayna(g)
 
-    # Rastgele döndür
-    g = rastgele_dondur(g)
+    # Rastgele döndürme
+    g = rastgele_dondurme(g)
 
     # Rastgele parlaklık/kontrast
-    g = parlaklik_kontrast_oyna(g)
+    g = parlaklik_kontrast_degistirme(g)
 
     return g

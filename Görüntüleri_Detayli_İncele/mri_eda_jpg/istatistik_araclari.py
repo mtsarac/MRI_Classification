@@ -1,6 +1,6 @@
 """
-stats_utils.py
---------------
+istatistik_araclari.py
+----------------------
 Görüntü bazlı özet istatistiklerin hesaplanması.
 """
 
@@ -8,18 +8,18 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .io_utils import goruntu_yukle_yoksa_gri
+from .io_araclari import goruntu_yukle_yoksa_gri
 
 
-def tek_goruntu_istatistikleri(path: str):
+def tek_goruntu_istatistikleri(yol: str):
     """
-    Tek bir JPEG/PNG görüntü için:
+    Tek bir JPEG/PNG görüntü için istatistikleri hesapla:
 
     - yükseklik (height), genişlik (width)
     - kanal sayısı (channel_count)
-    - yoğunluk istatistikleri: mean, std, min, max, p1, p99
+    - yoğunluk istatistikleri: ort, std, min, max, p1, p99
     """
-    goruntu = goruntu_yukle_yoksa_gri(path)
+    goruntu = goruntu_yukle_yoksa_gri(yol)
 
     if goruntu.ndim == 2:  # gri
         yukseklik, genislik = goruntu.shape
@@ -59,16 +59,16 @@ def tek_goruntu_istatistikleri(path: str):
 
 def tum_gorseller_icin_istatistik_hesapla(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Tüm dataset için görüntü bazlı özet istatistikleri hesaplar.
+    Tüm dataset için görüntü bazlı özet istatistikleri hesapla.
     """
     kayitlar = []
-    for _, row in tqdm(df.iterrows(), total=len(df), desc="Görüntü istatistikleri hesaplanıyor"):
-        stats = tek_goruntu_istatistikleri(row["filepath"])
-        stats["id"] = row["id"]
-        kayitlar.append(stats)
+    for _, satir in tqdm(df.iterrows(), total=len(df), desc="Görüntü istatistikleri hesaplanıyor"):
+        istatistikler = tek_goruntu_istatistikleri(satir["filepath"])
+        istatistikler["id"] = satir["id"]
+        kayitlar.append(istatistikler)
 
-    stats_df = pd.DataFrame(kayitlar)
-    birlesik = df.merge(stats_df, on="id", how="left")
+    istat_df = pd.DataFrame(kayitlar)
+    birlesik = df.merge(istat_df, on="id", how="left")
     return birlesik
 
 

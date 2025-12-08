@@ -16,6 +16,8 @@ from .ayarlar import (
     CIKTI_KLASORU,
     GORUNTU_UZANTILARI,
     RASTGELE_TOHUM,
+    SINIF_KLASORLERI,
+    SINIF_ETIKETI,
 )
 
 
@@ -33,21 +35,37 @@ def klasor_olustur_yoksa(klasor_yolu: str):
 def girdi_gorsellerini_listele(klasor_yolu: str = GIRDİ_KLASORU):
     """
     Girdi klasörü altında izin verilen uzantılara sahip tüm görüntü dosyalarını listele.
-    Alt klasörler de taranır.
+    Alt klasörler de taranır. Sınıf etiketi bilgisini de döndürür.
+    
+    Döndürülen: [{"path": dosya_yolu, "sınıf": sınıf_adı, "etiket": etiket_numarası}, ...]
     """
     klasor = Path(klasor_yolu)
     dosya_listesi = []
+    
     for kok, alt_klasorler, dosyalar in os.walk(klasor):
+        # Mevcut klasör adını kontrol et
+        mevcut_klasor_adi = Path(kok).name
+        
         for dosya in dosyalar:
             alt_uzanti = Path(dosya).suffix.lower()
             if alt_uzanti in GORUNTU_UZANTILARI:
                 tam_yol = str(Path(kok) / dosya)
-                dosya_listesi.append(tam_yol)
-    dosya_listesi.sort()
+                
+                # Sınıf etiketini belirle
+                if mevcut_klasor_adi in SINIF_ETIKETI:
+                    etiket = SINIF_ETIKETI[mevcut_klasor_adi]
+                    dosya_listesi.append({
+                        "path": tam_yol,
+                        "sinif": mevcut_klasor_adi,
+                        "etiket": etiket,
+                    })
+    
+    # Dosya yoluna göre sırala
+    dosya_listesi.sort(key=lambda x: x["path"])
     return dosya_listesi
 
 
-def goruntu_oku_gri(path: str) -> np.ndarray:
+def goruntu_gri_olarak_oku(yol: str) -> np.ndarray:
     """
     Verilen dosya yolundaki görüntüyü oku ve gri tonlamaya çevir.
     Çıktı numpy dizisi (H, W) float32 [0, 255] aralığında olur.
@@ -57,7 +75,7 @@ def goruntu_oku_gri(path: str) -> np.ndarray:
     return arr
 
 
-def goruntu_kaydet(path: str, goruntu: np.ndarray):
+def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray):
     """
     Verilen numpy dizisini (H, W) veya (H, W, 3) JPEG/PNG olarak kaydet.
     Değerler [0, 255] aralığında olmalı.
@@ -73,7 +91,7 @@ def goruntu_kaydet(path: str, goruntu: np.ndarray):
     img.save(str(kayit_yolu))
 
 
-def cikti_yolu_olustur(girdi_dosyasi: str, girdi_kok: str = GIRDİ_KLASORU, cikti_kok: str = CIKTI_KLASORU):
+def cikti_yolu_uretle(girdi_dosyasi: str, girdi_kok: str = GIRDİ_KLASORU, cikti_kok: str = CIKTI_KLASORU):
     """
     Girdi dosyasının CIKTI_KLASORU içindeki karşılık gelen yolunu üretir.
     Örnek:

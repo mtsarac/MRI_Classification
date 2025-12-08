@@ -1,5 +1,7 @@
 numpy
+pandas
 pillow
 matplotlib
 scikit-image
 opencv-python
+scipy

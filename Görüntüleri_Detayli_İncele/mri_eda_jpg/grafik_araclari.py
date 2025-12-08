@@ -1,6 +1,6 @@
 """
-plot_utils.py
--------------
+grafik_araclari.py
+------------------
 Tüm grafik çizim fonksiyonları.
 """
 
@@ -12,22 +12,22 @@ import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-from .config import (
-    OUTPUT_DIR,
-    RANDOM_SEED,
-    N_IMAGES_INTENSITY_SAMPLE,
-    N_IMAGES_FOR_EMBEDDING,
+from .ayarlar import (
+    CIKTI_KLASORU,
+    RASTGELE_TOHUM,
+    N_GORSELLER_YOGUNLUK_ORNEGI,
+    N_GORSELLER_GOMULEME,
 )
-from .io_utils import (
+from .io_araclari import (
     goruntu_yukle_yoksa_gri,
-    normalize_goruntu,
+    gorselu_normalize_et,
     rastgele_piksel_ornekle,
 )
-from .stats_utils import gomuleme_icin_ozellik_matrisi
+from .istatistik_araclari import gomuleme_icin_ozellik_matrisi
 
 
 def _kaydet_ve_kapat(fig, dosya_adi: str):
-    yol = os.path.join(OUTPUT_DIR, dosya_adi)
+    yol = os.path.join(CIKTI_KLASORU, dosya_adi)
     fig.savefig(yol, dpi=200)
     plt.close(fig)
     print(f"[KAYDEDILDI] {yol}")
@@ -45,16 +45,16 @@ def sinif_dagilimi_ciz(df):
 
 def boyut_dagilimlari_ciz(df):
     # Genişlik ve yükseklik histogramları
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    sns.histplot(df["genislik"], kde=False, ax=axes[0])
-    axes[0].set_title("Genişlik Dağılımı")
-    axes[0].set_xlabel("Genişlik (piksel)")
-    axes[0].set_ylabel("Adet")
+    fig, eksenler = plt.subplots(1, 2, figsize=(12, 4))
+    sns.histplot(df["genislik"], kde=False, ax=eksenler[0])
+    eksenler[0].set_title("Genişlik Dağılımı")
+    eksenler[0].set_xlabel("Genişlik (piksel)")
+    eksenler[0].set_ylabel("Adet")
 
-    sns.histplot(df["yukseklik"], kde=False, ax=axes[1])
-    axes[1].set_title("Yükseklik Dağılımı")
-    axes[1].set_xlabel("Yükseklik (piksel)")
-    axes[1].set_ylabel("Adet")
+    sns.histplot(df["yukseklik"], kde=False, ax=eksenler[1])
+    eksenler[1].set_title("Yükseklik Dağılımı")
+    eksenler[1].set_xlabel("Yükseklik (piksel)")
+    eksenler[1].set_ylabel("Adet")
 
     plt.tight_layout()
     _kaydet_ve_kapat(fig, "boyut_histogramlari.png")
@@ -84,17 +84,17 @@ def yogunluk_ozellik_kutu_grafikleri_ciz(df):
 def global_yogunluk_histogramlari_ciz(df):
     """Her sınıf için birkaç görüntüden piksel örnekleyip KDE çiz."""
     etiketler = df["label_name"].unique()
-    n_per_label = max(1, N_IMAGES_INTENSITY_SAMPLE // len(etiketler))
+    n_per_label = max(1, N_GORSELLER_YOGUNLUK_ORNEGI // len(etiketler))
 
     fig = plt.figure(figsize=(10, 6))
 
-    for label in etiketler:
-        alt = df[df["label_name"] == label]
-        alt = alt.sample(min(len(alt), n_per_label), random_state=RANDOM_SEED)
+    for etiket in etiketler:
+        alt = df[df["label_name"] == etiket]
+        alt = alt.sample(min(len(alt), n_per_label), random_state=RASTGELE_TOHUM)
 
         ornekler = []
-        for _, row in alt.iterrows():
-            piksel = rastgele_piksel_ornekle(row["filepath"])
+        for _, satir in alt.iterrows():
+            piksel = rastgele_piksel_ornekle(satir["filepath"])
             if piksel.size > 0:
                 ornekler.append(piksel)
 
@@ -102,7 +102,7 @@ def global_yogunluk_histogramlari_ciz(df):
             continue
 
         tum_piksel = np.concatenate(ornekler)
-        sns.kdeplot(tum_piksel, label=f"Label {label}", linewidth=1)
+        sns.kdeplot(tum_piksel, label=f"Sınıf {etiket}", linewidth=1)
 
     plt.title("Sınıflara Göre Global Yoğunluk Dağılımı (KDE)")
     plt.xlabel("Yoğunluk")
@@ -118,32 +118,32 @@ def rastgele_ornek_gorseller_ciz(df, n_per_label: int = 4):
     n_satir = len(etiketler)
     n_sutun = n_per_label
 
-    fig, axes = plt.subplots(n_satir, n_sutun, figsize=(3 * n_sutun, 3 * n_satir))
+    fig, eksenler = plt.subplots(n_satir, n_sutun, figsize=(3 * n_sutun, 3 * n_satir))
     if n_satir == 1:
-        axes = np.array([axes])
+        eksenler = np.array([eksenler])
 
-    for i, label in enumerate(etiketler):
-        alt = df[df["label_name"] == label]
+    for i, etiket in enumerate(etiketler):
+        alt = df[df["label_name"] == etiket]
         n_ornek = min(len(alt), n_per_label)
         if n_ornek == 0:
             continue
-        alt = alt.sample(n_ornek, random_state=RANDOM_SEED)
+        alt = alt.sample(n_ornek, random_state=RASTGELE_TOHUM)
 
-        for j, (_, row) in enumerate(alt.iterrows()):
-            ax = axes[i, j]
-            goruntu = goruntu_yukle_yoksa_gri(row["filepath"])
+        for j, (_, satir) in enumerate(alt.iterrows()):
+            ax = eksenler[i, j]
+            goruntu = goruntu_yukle_yoksa_gri(satir["filepath"])
             if goruntu.ndim == 2:
-                goruntu_norm = normalize_goruntu(goruntu)
+                goruntu_norm = gorselu_normalize_et(goruntu)
                 ax.imshow(goruntu_norm, cmap="gray")
             else:
                 # RGB ise [0,1] aralığına getirelim
                 goruntu_norm = goruntu / 255.0
                 ax.imshow(goruntu_norm.astype("float32"))
             ax.axis("off")
-            ax.set_title(f"Label {label}\nID: {row['id']}", fontsize=8)
+            ax.set_title(f"Sınıf {etiket}\nID: {satir['id']}", fontsize=8)
 
         for j in range(n_ornek, n_per_label):
-            axes[i, j].axis("off")
+            eksenler[i, j].axis("off")
 
     plt.suptitle("Her Sınıftan Rastgele Örnek Görüntüler", y=0.99)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
@@ -156,14 +156,14 @@ def pca_gomuleme_ciz(df):
         print("[UYARI] PCA için yeterli örnek yok.")
         return
 
-    if len(df) > N_IMAGES_FOR_EMBEDDING:
-        df_emb = df.sample(N_IMAGES_FOR_EMBEDDING, random_state=RANDOM_SEED)
+    if len(df) > N_GORSELLER_GOMULEME:
+        df_emb = df.sample(N_GORSELLER_GOMULEME, random_state=RASTGELE_TOHUM)
     else:
         df_emb = df.copy()
 
     X, ozellik_kolonlari = gomuleme_icin_ozellik_matrisi(df_emb)
 
-    pca = PCA(n_components=2, random_state=RANDOM_SEED)
+    pca = PCA(n_components=2, random_state=RASTGELE_TOHUM)
     X_pca = pca.fit_transform(X)
 
     fig = plt.figure(figsize=(6, 5))
@@ -181,8 +181,8 @@ def tsne_gomuleme_ciz(df):
         print("[UYARI] t-SNE için yeterli örnek yok.")
         return
 
-    if len(df) > N_IMAGES_FOR_EMBEDDING:
-        df_emb = df.sample(N_IMAGES_FOR_EMBEDDING, random_state=RANDOM_SEED)
+    if len(df) > N_GORSELLER_GOMULEME:
+        df_emb = df.sample(N_GORSELLER_GOMULEME, random_state=RASTGELE_TOHUM)
     else:
         df_emb = df.copy()
 
@@ -193,7 +193,7 @@ def tsne_gomuleme_ciz(df):
         perplexity=min(30, max(5, len(df_emb) // 2)),
         learning_rate="auto",
         init="random",
-        random_state=RANDOM_SEED,
+        random_state=RASTGELE_TOHUM,
     )
     X_tsne = tsne.fit_transform(X)
 

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-tek_goruntuyu_incele.py
------------------------
+tek_goruntu_incele.py
+---------------------
 Tek bir görüntü üzerinde ön işleme adımlarının sonucunu hızlıca görmek için
 kullanılan yardımcı script.
 
 Kullanım:
-    python scripts/tek_goruntuyu_incele.py veri/girdi/ornek.jpg
+    python scripts/tek_goruntu_incele.py veri/girdi/ornek.jpg
 """
 
 import sys
@@ -16,12 +16,12 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from goruntu_isleme_mri.io_araclari import goruntu_oku_gri
+from goruntu_isleme_mri.io_araclari import goruntu_gri_olarak_oku
 from goruntu_isleme_mri.on_isleme_adimlari import tek_goruntu_on_isle
 
 
-def ana(girdi_yolu: str):
-    goruntu_gri = goruntu_oku_gri(girdi_yolu)
+def main(girdi_yolu: str):
+    goruntu_gri = goruntu_gri_olarak_oku(girdi_yolu)
     on_islenmis, meta = tek_goruntu_on_isle(goruntu_gri)
 
     print("[BILGI] Meta bilgi:")
@@ -44,7 +44,7 @@ def ana(girdi_yolu: str):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Lütfen bir görüntü yolu verin. Örnek:")
-        print("  python scripts/tek_goruntuyu_incele.py veri/girdi/ornek.jpg")
+        print("  python scripts/tek_goruntu_incele.py veri/girdi/ornek.jpg")
         sys.exit(1)
 
     girdi_yolu = sys.argv[1]
@@ -52,4 +52,4 @@ if __name__ == "__main__":
         print(f"Girdi yolu bulunamadı: {girdi_yolu}")
         sys.exit(1)
 
-    ana(girdi_yolu)
+    main(girdi_yolu)
