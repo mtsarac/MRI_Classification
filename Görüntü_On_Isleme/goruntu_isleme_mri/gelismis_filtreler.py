@@ -6,9 +6,20 @@ Gürültü azaltma, kontrast iyileştirme ve kenar tespiti gibi işlemler.
 """
 
 import numpy as np
-import cv2
 from scipy import ndimage
-from skimage import filters, exposure
+
+# Optional imports
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+
+try:
+    from skimage import filters, exposure
+    SKIMAGE_AVAILABLE = True
+except ImportError:
+    SKIMAGE_AVAILABLE = False
 
 
 class GelismisFiltreler:
@@ -31,12 +42,18 @@ class GelismisFiltreler:
         """
         goruntu_uint8 = np.clip(goruntu, 0, 255).astype(np.uint8)
         
-        filtreli = cv2.bilateralFilter(
-            goruntu_uint8,
-            d=cerceve_eni,
-            sigmaColor=sigma_renk,
-            sigmaSpace=sigma_mekan
-        )
+        if CV2_AVAILABLE:
+            filtreli = cv2.bilateralFilter(
+                goruntu_uint8,
+                d=cerceve_eni,
+                sigmaColor=sigma_renk,
+                sigmaSpace=sigma_mekan
+            )
+        else:
+            # Scipy alternatifi: Gaussian filtre
+            filtreli = ndimage.gaussian_filter(goruntu_uint8.astype(np.float32), sigma=2.0)
+            filtreli = (filtreli / filtreli.max() * 255).astype(np.uint8)
+        
         return filtreli.astype(np.float32)
     
     @staticmethod
@@ -56,12 +73,18 @@ class GelismisFiltreler:
         """
         goruntu_uint8 = np.clip(goruntu, 0, 255).astype(np.uint8)
         
-        filtreli = cv2.fastNlMeansDenoising(
-            goruntu_uint8,
-            h=h,
-            templateWindowSize=template_penceresi,
-            searchWindowSize=arama_penceresi
-        )
+        if CV2_AVAILABLE:
+            filtreli = cv2.fastNlMeansDenoising(
+                goruntu_uint8,
+                h=h,
+                templateWindowSize=template_penceresi,
+                searchWindowSize=arama_penceresi
+            )
+        else:
+            # Scipy alternatifi: Gaussian filtre
+            filtreli = ndimage.gaussian_filter(goruntu_uint8.astype(np.float32), sigma=1.0)
+            filtreli = (filtreli / filtreli.max() * 255).astype(np.uint8) if filtreli.max() > 0 else goruntu_uint8
+        
         return filtreli.astype(np.float32)
     
     @staticmethod
@@ -78,10 +101,20 @@ class GelismisFiltreler:
         Çıktı: Kontrast iyileştirilmiş uint8 görüntü
         """
         goruntu_float = goruntu.astype("float32") / 255.0
-        goruntu_eq = exposure.equalize_adapthist(
-            goruntu_float,
-            clip_limit=clip_limit / 100.0
-        )
+        
+        if SKIMAGE_AVAILABLE:
+            goruntu_eq = exposure.equalize_adapthist(
+                goruntu_float,
+                clip_limit=clip_limit / 100.0
+            )
+        else:
+            # Basit histogram eşitleme (skimage yok ise)
+            hist, _ = np.histogram(goruntu.astype('uint8'), bins=256, range=(0, 256))
+            cdf = hist.cumsum()
+            cdf = cdf / cdf[-1] * 255
+            goruntu_eq = cdf[goruntu.astype('uint8')]
+            goruntu_eq = goruntu_eq / 255.0
+        
         return (goruntu_eq * 255.0).astype(np.uint8)
     
     @staticmethod

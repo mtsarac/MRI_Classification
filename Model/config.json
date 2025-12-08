@@ -46,7 +46,7 @@
     "feature_importance_figsize": [12, 6],
     "roc_curve_figsize": [8, 6],
     "dpi": 100,
-    "style": "seaborn-v0_8-darkgrid",
+    "style": "default",
     "color_palette": "Set2",
     "font_size": 12
   },

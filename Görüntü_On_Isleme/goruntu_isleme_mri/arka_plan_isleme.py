@@ -6,7 +6,41 @@ ilgi bölgesinin (ROI) sınır kutusunu bulma işlemleri.
 """
 
 import numpy as np
-from skimage.filters import threshold_otsu
+
+# scikit-image optional import
+try:
+    from skimage.filters import threshold_otsu
+    SKIMAGE_AVAILABLE = True
+except ImportError:
+    SKIMAGE_AVAILABLE = False
+    # Otsu eşiğini hesaplamak için alternatif fonksiyon
+    def threshold_otsu(image):
+        """Basit Otsu eşiği uygulaması"""
+        hist, bin_edges = np.histogram(image.astype('uint8'), bins=256, range=(0, 256))
+        hist = hist.astype('float32') / hist.sum()
+        
+        total_mean = np.sum(np.arange(256) * hist)
+        current_sum = 0
+        max_variance = 0
+        threshold = 0
+        
+        for t in range(256):
+            current_sum += hist[t]
+            if current_sum == 0:
+                continue
+            if current_sum == 1:
+                continue
+            
+            background_mean = np.sum(np.arange(t + 1) * hist[:t + 1]) / current_sum
+            foreground_mean = (total_mean - np.sum(np.arange(t + 1) * hist[:t + 1])) / (1 - current_sum)
+            
+            variance = current_sum * (1 - current_sum) * (background_mean - foreground_mean) ** 2
+            
+            if variance > max_variance:
+                max_variance = variance
+                threshold = t
+        
+        return threshold
 
 
 def arka_plan_tonu_tahmin_et(goruntu: np.ndarray) -> float:

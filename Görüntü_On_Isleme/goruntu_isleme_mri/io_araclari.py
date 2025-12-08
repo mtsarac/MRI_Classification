@@ -79,10 +79,30 @@ def goruntu_gri_olarak_oku(yol: str) -> np.ndarray:
     ---------
     np.ndarray
         Gri tonlama görüntü (H, W) float32 [0, 255] aralığında
+    
+    Raises:
+    ------
+    FileNotFoundError: Dosya bulunamadığında
+    ValueError: Görüntü formatı geçersizse
     """
-    img = Image.open(yol).convert("L")  # 8-bit gri tonlama
-    arr = np.array(img).astype(np.float32)
-    return arr
+    try:
+        dosya_yolu = Path(yol)
+        if not dosya_yolu.exists():
+            raise FileNotFoundError(f"Görüntü dosyası bulunamadı: {yol}")
+        
+        img = Image.open(yol).convert("L")  # 8-bit gri tonlama
+        arr = np.array(img).astype(np.float32)
+        
+        if arr.size == 0:
+            raise ValueError(f"Boş görüntü yüklendi: {yol}")
+        
+        return arr
+    except FileNotFoundError as e:
+        print(f"[HATA] {str(e)}")
+        raise
+    except Exception as e:
+        print(f"[HATA] Görüntü okuma hatası ({yol}): {str(e)}")
+        raise
 
 
 def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray) -> None:
@@ -95,16 +115,31 @@ def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray) -> None:
         Kaydedilecek dosyanın yolu
     goruntu : np.ndarray
         (H, W) veya (H, W, 3) numpy dizisi [0, 255] aralığında
+    
+    Raises:
+    ------
+    ValueError: Geçersiz görüntü şekli veya veri tipi
+    IOError: Dosya yazma hatası
     """
-    arr = goruntu
-    if arr.ndim == 2:
-        img = Image.fromarray(arr.astype("uint8"), mode="L")
-    else:
-        img = Image.fromarray(arr.astype("uint8"), mode="RGB")
+    try:
+        if goruntu is None or goruntu.size == 0:
+            raise ValueError("Geçersiz görüntü: Boş veya None")
+        
+        if goruntu.ndim not in (2, 3):
+            raise ValueError(f"Geçersiz görüntü şekli: {goruntu.ndim}D (beklenen: 2D veya 3D)")
+        
+        arr = goruntu
+        if arr.ndim == 2:
+            img = Image.fromarray(arr.astype("uint8"), mode="L")
+        else:
+            img = Image.fromarray(arr.astype("uint8"), mode="RGB")
 
-    kayit_yolu = Path(yol)
-    kayit_yolu.parent.mkdir(parents=True, exist_ok=True)
-    img.save(str(kayit_yolu))
+        kayit_yolu = Path(yol)
+        kayit_yolu.parent.mkdir(parents=True, exist_ok=True)
+        img.save(str(kayit_yolu))
+    except Exception as e:
+        print(f"[HATA] Görüntü kaydetme hatası ({yol}): {str(e)}")
+        raise
 
 
 def cikti_yolu_uretle(girdi_dosyasi: str, girdi_kok: str = GIRDİ_KLASORU, cikti_kok: str = CIKTI_KLASORU) -> str:

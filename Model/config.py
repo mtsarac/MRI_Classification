@@ -10,7 +10,7 @@ Tüm hiperparametreler bu dosyada tanımlanır ve yönetilir.
 """
 
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from pathlib import Path
 
 # Proje kök dizini
@@ -78,15 +78,21 @@ _POSSIBLE_CSV_NAMES = [
     'goruntu_ozellikleri_scaled.csv',
     'goruntu_ozellikleri.csv',
 ]
+
+# ASCII yollarını tercih et, Türkçe yolları fallback olarak kullan
 _POSSIBLE_CSV_DIRS = [
-    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'çıktı',
-    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'cikti',
-    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'outputs',
+    PROJECT_ROOT / 'Goruntu_On_Isleme' / 'cikti',      # ASCII - tercih edilen
+    PROJECT_ROOT / 'Goruntu_On_Isleme' / 'outputs',    # ASCII alternatif
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'cikti',      # Türkçe - fallback
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'çıktı',      # Türkçe - fallback
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'outputs',    # Türkçe - fallback
 ]
 
 # CSV dosyasını otomatik bulma
 _CSV_FILE = None
 for csv_dir in _POSSIBLE_CSV_DIRS:
+    if not csv_dir.exists():
+        continue
     for csv_name in _POSSIBLE_CSV_NAMES:
         potential_csv = csv_dir / csv_name
         if potential_csv.exists():
@@ -95,9 +101,9 @@ for csv_dir in _POSSIBLE_CSV_DIRS:
     if _CSV_FILE:
         break
 
-# Eğer CSV bulunamazsa varsayılan yol belirle
+# Eğer CSV bulunamazsa varsayılan ASCII yolu belirle
 if not _CSV_FILE:
-    _CSV_FILE = str(PROJECT_ROOT / 'Görüntü_On_Isleme' / 'çıktı' / 'goruntu_ozellikleri_scaled.csv')
+    _CSV_FILE = str(PROJECT_ROOT / 'Goruntu_On_Isleme' / 'cikti' / 'goruntu_ozellikleri_scaled.csv')
 
 DATA_CONFIG = {
     'csv_file': _CSV_FILE,
@@ -141,6 +147,31 @@ def _create_output_directories():
     for dir_key in ['output_dir', 'models_dir', 'reports_dir', 'visualizations_dir']:
         dir_path = Path(DATA_CONFIG[dir_key])
         dir_path.mkdir(parents=True, exist_ok=True)
+
+
+def validate_csv_file(csv_path: str = None) -> Tuple[bool, str]:
+    """
+    CSV dosyasının varlığını ve geçerliliğini kontrol et.
+    
+    Args:
+        csv_path: Kontrol edilecek CSV dosyasının yolu (varsayılan: DATA_CONFIG['csv_file'])
+    
+    Returns:
+        Tuple[bool, str]: (Geçerli mi, İleti)
+    """
+    csv_file = csv_path or DATA_CONFIG['csv_file']
+    csv_path_obj = Path(csv_file)
+    
+    if not csv_path_obj.exists():
+        return False, f"[HATA] CSV dosyası bulunamadı: {csv_file}\n\nEnsure veri ön işleme adımlarını çalıştırın."
+    
+    if not csv_path_obj.is_file():
+        return False, f"[HATA] Yol bir dosya değil: {csv_file}"
+    
+    if csv_path_obj.stat().st_size == 0:
+        return False, f"[HATA] CSV dosyası boş: {csv_file}"
+    
+    return True, f"[OK] CSV dosyası geçerli: {csv_file}"
 
 
 class ConfigManager:

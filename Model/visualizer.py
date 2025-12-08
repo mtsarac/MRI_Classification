@@ -35,7 +35,7 @@ class ModelVisualizer:
                  output_dir: str = 'Model/outputs/visualizations',
                  figsize: Tuple[int, int] = (12, 8),
                  dpi: int = 100,
-                 style: str = 'seaborn-v0_8-darkgrid'):
+                 style: str = 'default'):
         r"""
         Visualizer'ı başlat.
         

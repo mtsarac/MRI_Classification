@@ -11,9 +11,21 @@ Tek bir MRI görüntüsü üzerinde uygulanacak ön işleme adımlarını içeri
 """
 
 import numpy as np
-import cv2
 from typing import Tuple, Dict, Optional
-from skimage import exposure
+from scipy import ndimage
+
+# OpenCV ve scikit-image optional importları
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    
+try:
+    from skimage import exposure
+    SKIMAGE_AVAILABLE = True
+except ImportError:
+    SKIMAGE_AVAILABLE = False
 
 from .ayarlar import (
     HEDEF_GENISLIK,
@@ -98,6 +110,10 @@ def histogram_esit(goruntu_uint8: np.ndarray) -> np.ndarray:
         if goruntu_uint8 is None or goruntu_uint8.size == 0:
             raise ValueError("Geçersiz görüntü: Boş veya None")
         
+        if not SKIMAGE_AVAILABLE:
+            print("[UYARI] scikit-image kurulu değil. Histogram eşitleme atlanıyor.")
+            return goruntu_uint8
+        
         # 0-1 aralığına getir
         goruntu_float = goruntu_uint8.astype("float32") / 255.0
         goruntu_eq = exposure.equalize_adapthist(goruntu_float, clip_limit=CLAHE_CLIP_LIMIT)
@@ -128,8 +144,17 @@ def boyutu_degistir(goruntu_uint8: np.ndarray, genislik: int = HEDEF_GENISLIK, y
             raise ValueError("Genişlik ve yükseklik pozitif olmalı")
         
         hedef_boyut = (genislik, yukseklik)
-        # cv2.resize boyut parametresi (width, height) sırasıyla alır
-        yeniden = cv2.resize(goruntu_uint8, hedef_boyut, interpolation=cv2.INTER_LINEAR)
+        
+        if CV2_AVAILABLE:
+            # cv2.resize boyut parametresi (width, height) sırasıyla alır
+            yeniden = cv2.resize(goruntu_uint8, hedef_boyut, interpolation=cv2.INTER_LINEAR)
+        else:
+            # PIL alternatifi
+            from PIL import Image
+            pil_image = Image.fromarray(goruntu_uint8)
+            pil_image = pil_image.resize(hedef_boyut, Image.Resampling.BILINEAR)
+            yeniden = np.array(pil_image)
+        
         return yeniden
     except Exception as e:
         print(f"[HATA] boyutu_degistir içinde hata: {str(e)}")
@@ -286,10 +311,18 @@ def morfolojik_islemler(goruntu: np.ndarray, kernel_boyutu: int = 3) -> np.ndarr
             raise ValueError("Kernel boyutu pozitif tek sayı olmalı")
         
         goruntu_uint8 = np.clip(goruntu, 0, 255).astype("uint8")
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_boyutu, kernel_boyutu))
         
-        # Opening: Erosion -> Dilation (gürültü temizleme)
-        acilis = cv2.morphologyEx(goruntu_uint8, cv2.MORPH_OPEN, kernel)
+        if CV2_AVAILABLE:
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_boyutu, kernel_boyutu))
+            # Opening: Erosion -> Dilation (gürültü temizleme)
+            acilis = cv2.morphologyEx(goruntu_uint8, cv2.MORPH_OPEN, kernel)
+        else:
+            # Scipy alternatifi
+            from scipy import ndimage
+            kernel = ndimage.generate_binary_structure(2, 2)
+            # Opening: Erosion -> Dilation
+            eroded = ndimage.binary_erosion(goruntu_uint8 > 128, kernel).astype(goruntu_uint8.dtype) * 255
+            acilis = ndimage.binary_dilation(eroded > 128, kernel).astype(goruntu_uint8.dtype) * 255
         
         return acilis
     except Exception as e:
@@ -320,8 +353,17 @@ def canny_kenar_haritasi(goruntu: np.ndarray, esik1: int = 100, esik2: int = 200
         
         goruntu_uint8 = np.clip(goruntu, 0, 255).astype("uint8")
         
-        # Canny kenar dedeksiyonu
-        kenarlar = cv2.Canny(goruntu_uint8, esik1, esik2)
+        if CV2_AVAILABLE:
+            # Canny kenar dedeksiyonu
+            kenarlar = cv2.Canny(goruntu_uint8, esik1, esik2)
+        else:
+            # Scipy alternatifi: Sobel operatörü kullan
+            from scipy import ndimage
+            sx = ndimage.sobel(goruntu_uint8.astype(float), axis=0)
+            sy = ndimage.sobel(goruntu_uint8.astype(float), axis=1)
+            kenarlar = np.sqrt(sx**2 + sy**2)
+            kenarlar = (kenarlar / kenarlar.max() * 255).astype("uint8") if kenarlar.max() > 0 else np.zeros_like(goruntu_uint8)
+            kenarlar = (kenarlar > esik1).astype("uint8") * 255
         
         return kenarlar
     except Exception as e:

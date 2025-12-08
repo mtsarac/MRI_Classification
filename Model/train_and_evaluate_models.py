@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from Model.gradient_boosting_model import GradientBoostingModel
 from Model.linear_svm_model import LinearSVMModel
 from Model.model_evaluator import ModelEvaluator, ReportGenerator
-from Model.config import config
+from Model.config import config, validate_csv_file
 from Model.visualizer import ModelVisualizer
 from Model.model_manager import ModelManager
 
@@ -78,6 +78,14 @@ def load_csv_data(csv_path: str) -> pd.DataFrame:
     pd.DataFrame
         Yüklenen veri
     """
+    # CSV dosyasını valide et
+    is_valid, message = validate_csv_file(csv_path)
+    print(message)
+    
+    if not is_valid:
+        print("\n[HATA] Veri yükleme iptal edildi!")
+        return None
+    
     try:
         df = pd.read_csv(csv_path)
         print(f"\n[VERİ YÜKLEME] CSV başarıyla yüklendi")
@@ -85,9 +93,6 @@ def load_csv_data(csv_path: str) -> pd.DataFrame:
         print(f"  Satır: {len(df)}, Sütun: {len(df.columns)}")
         print(f"  Özellikleri: {df.columns.tolist()[:10]}...")
         return df
-    except FileNotFoundError:
-        print(f"[HATA] CSV dosyası bulunamadı: {csv_path}")
-        return None
     except Exception as e:
         print(f"[HATA] CSV yükleme hatası: {str(e)}")
         return None
@@ -484,4 +489,15 @@ def main():
 
 
 if __name__ == "__main__":
+    # CSV dosyasını valide et
+    is_valid, msg = validate_csv_file(CSV_FILE_PATH)
+    if not is_valid:
+        print(msg)
+        print("\n[HATA] CSV dosyası bulunamadı. Lütfen şu adımları yapın:")
+        print("1. Görüntü_On_Isleme/goruntu_isleme_kontrol_paneli.py'yi çalıştırın")
+        print("2. Toplu ön işleme yapın")
+        print("3. CSV oluşturun")
+        print("4. Normalizasyon uygulayın")
+        sys.exit(1)
+    
     main()
