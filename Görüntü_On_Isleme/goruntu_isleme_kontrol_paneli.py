@@ -5,14 +5,15 @@
 goruntu_isleme_kontrol_paneli.py
 ---------------------------------
 Görüntü işleme pipeline'ının tüm aşamalarını kontrol eden interaktif uygulama.
+MRI görüntü ön işleme, CSV oluşturma, veri bölüntüleme ve analiz işlemleri.
 
 Menü:
-  1. Tek görüntü işle ve görüntüle
-  2. Toplu görüntü işleme
-  3. CSV oluştur
-  4. Min-Max scaling uygula
-  5. İstatistikleri göster
-  6. Veri seti kontrol et
+  1. Toplu ön işleme
+  2. CSV oluşturma ve normalizasyon
+  3. Tek görüntü inceleme
+  4. Veri bölüntüleme
+  5. Veri seti kontrol
+  6. CSV analiz ve export
 
 Çalıştırma:
     python goruntu_isleme_kontrol_paneli.py
@@ -65,33 +66,33 @@ class GoruntulemeKontrolPaneli:
     def ana_menu(self) -> int:
         """Ana menüyü göster ve seçim al."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print(self.baslik.center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print(self.baslik.center(75))
+        print("=" * 75)
         
         print("\n[MENÜ]")
-        print("  1. Tek görüntü işle ve görüntüle")
-        print("  2. Toplu görüntü işleme")
-        print("  3. CSV oluştur")
-        print("  4. Min-Max scaling uygula")
-        print("  5. İstatistikleri göster")
-        print("  6. Veri seti kontrol et")
-        print("  7. Çıkış")
-        print("-" * 70)
+        print("  1. Toplu ön işleme")
+        print("  2. CSV oluşturma ve normalizasyon")
+        print("  3. Tek görüntü inceleme")
+        print("  4. Veri bölüntüleme (4 backend)")
+        print("  5. Veri seti kontrol")
+        print("  6. CSV analiz ve export")
+        print("  0. Çıkış")
+        print("-" * 75)
         
         try:
-            secim = int(input("\nSeçim yapınız (1-7): "))
+            secim = int(input("\nSeçim yapınız (0-6): "))
             return secim
         except ValueError:
             input("\nHatalı giriş! Enter'e basınız...")
-            return 0
+            return -1
     
     def tek_goruntu_isle(self):
         """Tek bir görüntüyü işle ve sonuçları göster."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print("TEK GÖRÜNTÜ İŞLEME".center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print("TEK GÖRÜNTÜ İNCELEME".center(75))
+        print("=" * 75)
         
         # Görüntü dosyalarını listele
         girdi_listesi = girdi_gorsellerini_listele(self.girdi_klasoru)
@@ -153,9 +154,9 @@ class GoruntulemeKontrolPaneli:
     def toplu_goruntu_isle(self):
         """Toplu görüntü işleme yapılan."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print("TOPLU GÖRÜNTÜ İŞLEME".center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print("TOPLU ÖN İŞLEME".center(75))
+        print("=" * 75)
         
         girdi_listesi = girdi_gorsellerini_listele(self.girdi_klasoru)
         
@@ -223,9 +224,9 @@ class GoruntulemeKontrolPaneli:
     def csv_olustur_menu(self):
         """CSV oluşturma menüsü."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print("CSV OLUŞTURMA".center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print("CSV OLUŞTURMA VE NORMALIZASYON".center(75))
+        print("=" * 75)
         
         if not os.path.exists(self.cikti_klasoru):
             print("\n[HATA] Çıktı klasörü bulunamadı!")
@@ -256,51 +257,12 @@ class GoruntulemeKontrolPaneli:
         
         input("\nDevam etmek için Enter'e basınız...")
     
-    def scaling_uygula_menu(self):
-        """Min-Max scaling menüsü."""
-        self.ekrani_temizle()
-        print("=" * 70)
-        print("MIN-MAX SCALING".center(70))
-        print("=" * 70)
-        
-        csv_yolu = os.path.join(self.cikti_klasoru, "goruntu_ozellikleri.csv")
-        
-        if not os.path.exists(csv_yolu):
-            print(f"\n[HATA] CSV dosyası bulunamadı!")
-            print(f"Lütfen önce CSV oluşturunuz.")
-            input("\nDevam etmek için Enter'e basınız...")
-            return
-        
-        print("\n[İŞLEM]")
-        print("  Min-Max scaling uygulanıyor...")
-        
-        try:
-            scaled_csv, stats = csv_ye_minmax_scaling_uygula(
-                csv_dosya_yolu=csv_yolu,
-                cikti_dosya_adi="goruntu_ozellikleri_scaled.csv"
-            )
-            
-            print(f"\n✓ Scaling başarıyla uygulandı!")
-            print(f"  Dosya: {scaled_csv}")
-            print(f"  Ölçeklenen sütun sayısı: {len(stats)}")
-            
-            # İlk 3 sütunun istatistiklerini göster
-            print("\n  [ÖLÇEKLEME İSTATİSTİKLERİ]")
-            for i, (col, stat) in enumerate(list(stats.items())[:3]):
-                print(f"    {col}")
-                print(f"      Min: {stat['min']:.4f}, Max: {stat['max']:.4f}")
-                
-        except Exception as e:
-            print(f"\n[HATA] Scaling uygulanamadı: {str(e)}")
-        
-        input("\nDevam etmek için Enter'e basınız...")
-    
     def istatistikleri_goster(self):
         """Veri seti istatistiklerini göster."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print("VERİ SETİ İSTATİSTİKLERİ".center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print("VERİ SETİ İSTATİSTİKLERİ".center(75))
+        print("=" * 75)
         
         csv_yolu = os.path.join(self.cikti_klasoru, "goruntu_ozellikleri.csv")
         
@@ -341,9 +303,9 @@ class GoruntulemeKontrolPaneli:
     def veri_seti_kontrol_et(self):
         """Veri setinin durumunu kontrol et."""
         self.ekrani_temizle()
-        print("=" * 70)
-        print("VERİ SETİ KONTROL".center(70))
-        print("=" * 70)
+        print("=" * 75)
+        print("VERİ SETİ KONTROL".center(75))
+        print("=" * 75)
         
         print("\n[KONTROL EDILIYOR]")
         
@@ -410,18 +372,26 @@ class GoruntulemeKontrolPaneli:
             secim = self.ana_menu()
             
             if secim == 1:
-                self.tek_goruntu_isle()
-            elif secim == 2:
                 self.toplu_goruntu_isle()
-            elif secim == 3:
+            elif secim == 2:
                 self.csv_olustur_menu()
+            elif secim == 3:
+                self.tek_goruntu_isle()
             elif secim == 4:
-                self.scaling_uygula_menu()
+                # Veri bölüntüleme için TUMU_ISLEMLER.py'den yararlan
+                print("\n[BİLGİ] Veri bölüntüleme için aşağıdaki komutu çalıştırın:")
+                print("  python scripts/TUMU_ISLEMLER.py")
+                print("\n  Menüde seçenek 4'ü seçip veri bölüntüleme yapabilirsiniz.")
+                input("\nDevam etmek için Enter'e basınız...")
             elif secim == 5:
-                self.istatistikleri_goster()
-            elif secim == 6:
                 self.veri_seti_kontrol_et()
-            elif secim == 7:
+            elif secim == 6:
+                # CSV analizi için TUMU_ISLEMLER.py'den yararlan
+                print("\n[BİLGİ] Detaylı CSV analizi ve export için aşağıdaki komutu çalıştırın:")
+                print("  python scripts/TUMU_ISLEMLER.py")
+                print("\n  Menüde seçenek 6'yı seçip analiz ve export yapabilirsiniz.")
+                input("\nDevam etmek için Enter'e basınız...")
+            elif secim == 0:
                 self.ekrani_temizle()
                 print("Hoşça kalınız!")
                 break
