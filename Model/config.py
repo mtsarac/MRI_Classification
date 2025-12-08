@@ -73,13 +73,39 @@ SVM_GRID_SEARCH_PARAMS = {
 }
 
 # ==================== DOSYA YOLLARI ====================
+# Dosya yolları proje kök dizinine göre belirlenir
+_POSSIBLE_CSV_NAMES = [
+    'goruntu_ozellikleri_scaled.csv',
+    'goruntu_ozellikleri.csv',
+]
+_POSSIBLE_CSV_DIRS = [
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'çıktı',
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'cikti',
+    PROJECT_ROOT / 'Görüntü_On_Isleme' / 'outputs',
+]
+
+# CSV dosyasını otomatik bulma
+_CSV_FILE = None
+for csv_dir in _POSSIBLE_CSV_DIRS:
+    for csv_name in _POSSIBLE_CSV_NAMES:
+        potential_csv = csv_dir / csv_name
+        if potential_csv.exists():
+            _CSV_FILE = str(potential_csv)
+            break
+    if _CSV_FILE:
+        break
+
+# Eğer CSV bulunamazsa varsayılan yol belirle
+if not _CSV_FILE:
+    _CSV_FILE = str(PROJECT_ROOT / 'Görüntü_On_Isleme' / 'çıktı' / 'goruntu_ozellikleri_scaled.csv')
+
 DATA_CONFIG = {
-    'csv_file': 'Görüntü_On_Isleme/çıktı/goruntu_ozellikleri_scaled.csv',
-    'veri_seti_klasoru': 'Veri_Seti',
-    'output_dir': 'Model/outputs',
-    'models_dir': 'Model/outputs/models',
-    'reports_dir': 'Model/outputs/reports',
-    'visualizations_dir': 'Model/outputs/visualizations',
+    'csv_file': _CSV_FILE,
+    'veri_seti_klasoru': str(PROJECT_ROOT / 'Veri_Seti'),
+    'output_dir': str(PROJECT_ROOT / 'Model' / 'outputs'),
+    'models_dir': str(PROJECT_ROOT / 'Model' / 'outputs' / 'models'),
+    'reports_dir': str(PROJECT_ROOT / 'Model' / 'outputs' / 'reports'),
+    'visualizations_dir': str(PROJECT_ROOT / 'Model' / 'outputs' / 'visualizations'),
 }
 
 # ==================== VİSUALİZASYON AYARLARI ====================
@@ -104,10 +130,17 @@ MODEL_VERSION_CONFIG = {
 
 # ==================== LOGGING AYARLARI ====================
 LOGGING_CONFIG = {
-    'log_file': 'Model/outputs/training.log',
+    'log_file': str(PROJECT_ROOT / 'Model' / 'outputs' / 'training.log'),
     'log_level': 'INFO',  # DEBUG, INFO, WARNING, ERROR
     'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 }
+
+# Çıktı klasörlerini otomatik oluştur
+def _create_output_directories():
+    """Gerekli çıktı klasörlerini oluştur."""
+    for dir_key in ['output_dir', 'models_dir', 'reports_dir', 'visualizations_dir']:
+        dir_path = Path(DATA_CONFIG[dir_key])
+        dir_path.mkdir(parents=True, exist_ok=True)
 
 
 class ConfigManager:
@@ -212,6 +245,9 @@ class ConfigManager:
         """String gösterimi."""
         return f"ConfigManager(config_keys={list(self.config.keys())})"
 
+
+# Gerekli çıktı klasörlerini otomatik oluştur
+_create_output_directories()
 
 # Global konfigürasyon yöneticisi
 config = ConfigManager()

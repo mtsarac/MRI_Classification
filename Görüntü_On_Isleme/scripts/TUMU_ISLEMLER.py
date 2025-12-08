@@ -30,7 +30,6 @@ Seçenekler:
 import sys
 import os
 import json
-import argparse
 from pathlib import Path
 from typing import Tuple, Dict, List, Optional
 import pandas as pd

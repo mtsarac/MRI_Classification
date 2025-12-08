@@ -7,6 +7,7 @@ Dosya sisteminden görüntüleri bulma, okuma ve kaydetme ile ilgili yardımcı 
 import os
 import random
 from pathlib import Path
+from typing import List, Dict
 
 import numpy as np
 from PIL import Image
@@ -21,18 +22,18 @@ from .ayarlar import (
 )
 
 
-def rastgele_tohum_ayarla(tohum: int = RASTGELE_TOHUM):
+def rastgele_tohum_ayarla(tohum: int = RASTGELE_TOHUM) -> None:
     """Tüm rastgelelik kaynakları için sabit tohum ayarla."""
     random.seed(tohum)
     np.random.seed(tohum)
 
 
-def klasor_olustur_yoksa(klasor_yolu: str):
+def klasor_olustur_yoksa(klasor_yolu: str) -> None:
     """Verilen klasör yolu yoksa oluştur."""
     Path(klasor_yolu).mkdir(parents=True, exist_ok=True)
 
 
-def girdi_gorsellerini_listele(klasor_yolu: str = GIRDİ_KLASORU):
+def girdi_gorsellerini_listele(klasor_yolu: str = GIRDİ_KLASORU) -> List[Dict]:
     """
     Girdi klasörü altında izin verilen uzantılara sahip tüm görüntü dosyalarını listele.
     Alt klasörler de taranır. Sınıf etiketi bilgisini de döndürür.
@@ -68,17 +69,32 @@ def girdi_gorsellerini_listele(klasor_yolu: str = GIRDİ_KLASORU):
 def goruntu_gri_olarak_oku(yol: str) -> np.ndarray:
     """
     Verilen dosya yolundaki görüntüyü oku ve gri tonlamaya çevir.
-    Çıktı numpy dizisi (H, W) float32 [0, 255] aralığında olur.
+    
+    Parametreler:
+    -----------
+    yol : str
+        Görüntü dosyasının yolu
+    
+    Döndürülen:
+    ---------
+    np.ndarray
+        Gri tonlama görüntü (H, W) float32 [0, 255] aralığında
     """
-    img = Image.open(path).convert("L")  # 8-bit gri tonlama
+    img = Image.open(yol).convert("L")  # 8-bit gri tonlama
     arr = np.array(img).astype(np.float32)
     return arr
 
 
-def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray):
+def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray) -> None:
     """
-    Verilen numpy dizisini (H, W) veya (H, W, 3) JPEG/PNG olarak kaydet.
-    Değerler [0, 255] aralığında olmalı.
+    Verilen numpy dizisini JPEG/PNG olarak kaydet.
+    
+    Parametreler:
+    -----------
+    yol : str
+        Kaydedilecek dosyanın yolu
+    goruntu : np.ndarray
+        (H, W) veya (H, W, 3) numpy dizisi [0, 255] aralığında
     """
     arr = goruntu
     if arr.ndim == 2:
@@ -86,12 +102,12 @@ def goruntu_dosyaya_kaydet(yol: str, goruntu: np.ndarray):
     else:
         img = Image.fromarray(arr.astype("uint8"), mode="RGB")
 
-    kayit_yolu = Path(path)
+    kayit_yolu = Path(yol)
     kayit_yolu.parent.mkdir(parents=True, exist_ok=True)
     img.save(str(kayit_yolu))
 
 
-def cikti_yolu_uretle(girdi_dosyasi: str, girdi_kok: str = GIRDİ_KLASORU, cikti_kok: str = CIKTI_KLASORU):
+def cikti_yolu_uretle(girdi_dosyasi: str, girdi_kok: str = GIRDİ_KLASORU, cikti_kok: str = CIKTI_KLASORU) -> str:
     """
     Girdi dosyasının CIKTI_KLASORU içindeki karşılık gelen yolunu üretir.
     Örnek:
