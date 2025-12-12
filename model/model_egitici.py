@@ -53,6 +53,12 @@ import seaborn as sns
 
 from ayarlar import *
 
+# Ensure VERI_CSV is imported
+try:
+    from ayarlar import VERI_CSV
+except ImportError:
+    VERI_CSV = Path("goruntu_isleme/cikti/goruntu_ozellikleri_scaled.csv")
+
 
 class ModelEgitici:
     """
@@ -306,11 +312,18 @@ class ModelEgitici:
         
         if self.model_tipi in ["xgboost", "lightgbm"] and X_val is not None:
             # Gradient boosting için early stopping kullan
-            self.model.fit(
-                X_train, y_train,
-                eval_set=[(X_val, y_val)],
-                verbose=False
-            )
+            if self.model_tipi == "xgboost":
+                self.model.fit(
+                    X_train, y_train,
+                    eval_set=[(X_val, y_val)],
+                    verbose=False
+                )
+            else:  # lightgbm
+                # LightGBM 'verbose' yerine 'log_evaluation' kullanır
+                self.model.fit(
+                    X_train, y_train,
+                    eval_set=[(X_val, y_val)]
+                )
             print(f"   ✓ Early stopping ile eğitim tamamlandı")
         else:
             self.model.fit(X_train, y_train)
