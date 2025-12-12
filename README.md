@@ -60,6 +60,28 @@ cd MRI_Classification
 pip install -r requirements.txt
 ```
 
+**⚠️ Python 3.14 Kullanıcıları İçin Önemli Not:**
+
+Python 3.14 çok yeni bir sürüm olduğu için `scikit-image` paketi için derlenmiş binary bulunmayabilir. Bu durumda aşağıdaki komutu kullanın:
+
+```bash
+# scikit-image için önceden derlenmiş wheel kullan
+pip install --only-binary=:all: scikit-image
+```
+
+Eğer hala sorun yaşıyorsanız, tüm paketleri şu şekilde yükleyin:
+
+```bash
+# OpenCV'yi yükle
+pip install opencv-python
+
+# scikit-image'i binary olarak yükle
+pip install --only-binary=:all: scikit-image
+
+# Kalan paketleri yükle
+pip install numpy pandas scipy Pillow SimpleITK scikit-learn xgboost lightgbm imbalanced-learn matplotlib seaborn tqdm
+```
+
 **Veya modül bazlı kurulum:**
 ```bash
 # Görüntü işleme
