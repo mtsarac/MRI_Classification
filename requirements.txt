@@ -4,10 +4,10 @@
 # Kurulum:
 #   pip install -r requirements.txt
 #
-# Ya da modül bazlı kurulum için:
-#   pip install -r goruntu_isleme/requirements.txt
-#   pip install -r eda_analiz/requirements.txt
-#   pip install -r model/requirements.txt
+# Not: Bu dosya tüm modüller için gerekli tüm paketleri içerir.
+#      Sadece EDA analizi için: eda_analiz/requirements.txt
+#
+# NOT: Development araçları (pytest, coverage, etc.) da bu dosyada dahildir.
 # =====================================================================
 
 # -------------------- Temel Python Kütüphaneleri --------------------
