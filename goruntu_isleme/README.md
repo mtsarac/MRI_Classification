@@ -5,20 +5,26 @@ MRI görüntülerini işlemek ve özellik çıkarmak için gelişmiş modül.
 ## 📦 Kurulum
 
 ```bash
+# Ana dizinden tüm bağımlılıkları yükle
+cd ..
 pip install -r requirements.txt
 ```
 
+**Not:** Görüntü işleme modülü için ayrı requirements.txt yok, tüm bağımlılıklar ana `requirements.txt` dosyasında.
+
 ## 🚀 Kullanım
+
+**Not:** Komutlarda `python` veya `python3` kullanabilirsiniz. Windows'ta genellikle `python`, Linux/Mac'te `python3` kullanılır.
 
 ### 1. Sistem Kontrolü (Önerilen)
 ```bash
-python3 pipeline_quick_test.py
+python pipeline_quick_test.py
 ```
 Paket ve veri seti kontrolü yapar.
 
 ### 2. Ana İşleme Pipeline
 ```bash
-python3 ana_islem.py
+python ana_islem.py
 ```
 
 **Menü seçenekleri:**
@@ -33,7 +39,7 @@ python3 ana_islem.py
 
 ### 3. Pipeline Test (Tek Görüntü)
 ```bash
-python3 test_pipeline.py [goruntu_yolu]
+python test_pipeline.py [goruntu_yolu]
 ```
 Tek görüntü üzerinde tüm adımları görselleştirir.
 
