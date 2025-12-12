@@ -201,7 +201,7 @@ def tum_islemleri_yap():
     
     Kullanıcı müdahalesi gerektirmez, baştan sona otomatik çalışır.
     Yeni başlayanlar veya hızlı işleme için ideal.
-    """"
+    """
     print("\n[6] TÜM İŞLEMLER OTOMATİK")
     print("-" * 60)
     print("\nŞu işlemler sırayla yapılacak:")
