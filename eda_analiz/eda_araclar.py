@@ -277,7 +277,7 @@ class EDAAnaLiz:
         Args:
             df: Özellik DataFrame'i
             n_ornekler: PCA için kullanılacak maksimum örnek sayısı
-        """"
+        """
         # Özellik matrisi oluştur
         ozellikler = [
             "genislik", "yukseklik", "en_boy_orani",
