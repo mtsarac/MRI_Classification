@@ -54,16 +54,27 @@ htmlcov/
 Veri_Seti/
 output/
 results/
-*.csv
 logs/
 temp/
 tmp/
+
+# Model outputs
+model/ciktilar/modeller/*.pkl
+model/ciktilar/modeller/*.json
+model/ciktilar/raporlar/*.txt
+model/ciktilar/gorseller/*.png
+
+# Processed data
+goruntu_isleme/cikti/
+*.csv
+
+# EDA outputs
+eda_ciktilar/
 
 # Model weights
 *.h5
 *.pt
 *.pth
-*.pkl
 *.joblib
 
 # OS
