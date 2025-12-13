@@ -13,8 +13,26 @@ from PIL import Image
 from tqdm import tqdm
 from scipy import ndimage
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler, MaxAbsScaler
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 from ayarlar import *
+
+
+def _ozellik_cikar_wrapper(goruntu_yolu: str, sinif_adi: str) -> Optional[Dict]:
+    """⚡ Paralel özellik çıkarma için wrapper fonksiyon."""
+    try:
+        cikarici = OzellikCikarici()
+        ozellikler = cikarici.tek_goruntu_ozellikleri(str(goruntu_yolu))
+        
+        if ozellikler:
+            ozellikler["sinif"] = sinif_adi
+            ozellikler["etiket"] = SINIF_ETIKETI[sinif_adi]
+            ozellikler["tam_yol"] = str(goruntu_yolu)
+            return ozellikler
+    except Exception:
+        pass
+    return None
 
 
 class OzellikCikarici:
@@ -22,7 +40,7 @@ class OzellikCikarici:
     
     def __init__(self):
         """Özellik çıkarıcıyı başlat."""
-        pass
+        self.n_jobs = max(1, cpu_count() - 1)  # Bir çekirdek sisteme bırak
     
     def tek_goruntu_ozellikleri(self, goruntu_yolu: str) -> Optional[Dict]:
         """
@@ -190,7 +208,7 @@ class OzellikCikarici:
         
         tum_ozellikler = []  # Tüm görüntülerin özelliklerini saklayacak liste
         
-        print("\nÖzellikler çıkarılıyor...\n")
+        print(f"\n⚡ Özellikler çıkarılıyor (paralel: {self.n_jobs} çekirdek)...\n")
         
         # Her sınıf için döngü
         for sinif_adi in SINIF_KLASORLERI:
@@ -204,15 +222,17 @@ class OzellikCikarici:
             # Klasördeki tüm görüntüleri bul (.png ve .jpg)
             gorseller = list(sinif_klasoru.glob("*.png")) + list(sinif_klasoru.glob("*.jpg"))
             
-            # Her görüntü için özellikleri çıkar (ilerleme çubuğu ile)
-            for goruntu_yolu in tqdm(gorseller, desc=f"{sinif_adi} işleniyor"):
-                ozellikler = self.tek_goruntu_ozellikleri(str(goruntu_yolu))
-                
-                if ozellikler:
-                    ozellikler["sinif"] = sinif_adi
-                    ozellikler["etiket"] = SINIF_ETIKETI[sinif_adi]
-                    ozellikler["tam_yol"] = str(goruntu_yolu)
-                    tum_ozellikler.append(ozellikler)
+            # ⚡ Paralel özellik çıkarma
+            with Pool(processes=self.n_jobs) as pool:
+                partial_func = partial(_ozellik_cikar_wrapper, sinif_adi=sinif_adi)
+                sonuclar = list(tqdm(
+                    pool.imap(partial_func, gorseller),
+                    total=len(gorseller),
+                    desc=f"{sinif_adi} işleniyor (paralel)"
+                ))
+            
+            # None olmayan sonuçları ekle
+            tum_ozellikler.extend([s for s in sonuclar if s is not None])
         
         if not tum_ozellikler:
             print("[HATA] Hiç özellik çıkarılamadı!")
