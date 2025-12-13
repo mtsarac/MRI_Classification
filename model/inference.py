@@ -22,6 +22,9 @@ import json
 import numpy as np
 import pandas as pd
 from typing import Union, List, Dict, Optional
+from multiprocessing import Pool, cpu_count
+from functools import partial
+from tqdm import tqdm
 
 # Görüntü işleme için
 sys.path.insert(0, str(Path(__file__).parent.parent / "goruntu_isleme"))
@@ -29,6 +32,18 @@ from goruntu_isleyici import GorselIsleyici
 from ozellik_cikarici import OzellikCikarici
 
 from ayarlar import MODELS_KLASORU
+
+
+def _batch_tahmin_wrapper(goruntu_yolu: Path, model_yolu: Path) -> Dict:
+    """⚡ Paralel batch tahmin için wrapper fonksiyon."""
+    try:
+        inference = ModelInference(model_yolu)
+        return inference.tahmin_yap(goruntu_yolu, detayli=False)
+    except Exception as e:
+        return {
+            'dosya': str(goruntu_yolu),
+            'hata': str(e)
+        }
 
 
 class ModelInference:
@@ -65,6 +80,9 @@ class ModelInference:
             2: "MildDemented (Hafif Demans)",
             3: "ModerateDemented (Orta Seviye Demans)"
         }
+        
+        # ⚡ Paralel işlem için
+        self.n_jobs = max(1, cpu_count() - 1)
     
     def _model_yukle(self):
         """Modeli ve metadata'sını yükle."""
@@ -268,24 +286,18 @@ class ModelInference:
             print(f"⚠️  Klasörde görüntü bulunamadı: {goruntu_klasoru}")
             return []
         
-        print(f"\n📁 Batch tahmin: {len(gorseller)} görüntü")
+        print(f"\n⚡ Batch tahmin: {len(gorseller)} görüntü (paralel: {self.n_jobs} çekirdek)")
         print(f"{'='*60}")
         
-        sonuclar = []
+        # ⚡ Paralel batch tahmin
+        partial_func = partial(_batch_tahmin_wrapper, model_yolu=self.model_yolu)
         
-        for i, goruntu_yolu in enumerate(gorseller, 1):
-            print(f"\n[{i}/{len(gorseller)}] İşleniyor: {goruntu_yolu.name}")
-            
-            try:
-                sonuc = self.tahmin_yap(goruntu_yolu, detayli=False)
-                sonuclar.append(sonuc)
-                print(f"   ✓ {sonuc['tahmin_adi']}")
-            except Exception as e:
-                print(f"   ✗ HATA: {e}")
-                sonuclar.append({
-                    'dosya': str(goruntu_yolu),
-                    'hata': str(e)
-                })
+        with Pool(processes=self.n_jobs) as pool:
+            sonuclar = list(tqdm(
+                pool.imap(partial_func, gorseller),
+                total=len(gorseller),
+                desc="Batch tahmin (paralel)"
+            ))
         
         # Özet
         print(f"\n{'='*60}")
