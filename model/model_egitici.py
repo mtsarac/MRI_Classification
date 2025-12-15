@@ -444,6 +444,20 @@ class ModelEgitici:
         self.cv_scores = cv_results
         return cv_results
     
+    def grid_search(self, X_train, y_train, n_iter: int = 50) -> Dict:
+        """
+        Geriye donuk uyumluluk icin hyperparameter_tuning kisayolu.
+        
+        Args:
+            X_train: Egitim ozellikleri
+            y_train: Egitim etiketleri
+            n_iter: RandomizedSearch iterasyon sayisi
+            
+        Returns:
+            En iyi parametreler
+        """
+        return self.hyperparameter_tuning(X_train, y_train, n_iter=n_iter)
+    
     def hyperparameter_tuning(self, X_train, y_train, n_iter: int = 50) -> Dict:
         """
         Hyperparameter tuning ile en iyi parametreleri bul.
