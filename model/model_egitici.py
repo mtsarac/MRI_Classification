@@ -343,11 +343,11 @@ class ModelEgitici:
         if self.model_tipi in ["xgboost", "lightgbm"] and X_val is not None:
             # Gradient boosting için early stopping kullan
             if self.model_tipi == "xgboost":
+                # XGBoost 3.x - sadece eval_set kullan, early stopping artık desteklenmiyor
                 self.model.fit(
                     X_train, y_train,
                     eval_set=[(X_val, y_val)],
-                    verbose=False,
-                    early_stopping_rounds=EARLY_STOPPING_ROUNDS
+                    verbose=False
                 )
             else:  # lightgbm
                 fit_kwargs = {'eval_set': [(X_val, y_val)]}

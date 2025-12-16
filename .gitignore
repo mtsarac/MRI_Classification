@@ -63,6 +63,7 @@ model/ciktilar/modeller/*.pkl
 model/ciktilar/modeller/*.json
 model/ciktilar/raporlar/*.txt
 model/ciktilar/gorseller/*.png
+model/ciktilar/*
 
 # Processed data
 goruntu_isleme/cikti/
