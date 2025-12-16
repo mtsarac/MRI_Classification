@@ -37,7 +37,7 @@ STRATIFY_AKTIF = True      # Sınıf dengesini koru (her sete aynı oranda sın�
 # Gradient Boosting, güçlü bir topluluk öğrenme algoritmasıdır
 # Birden fazla zayıf öğrenci (weak learner) birleştirerek güçlü bir model oluşturur
 GB_AYARLARI = {
-    'n_estimators': 100,         # Ağaç sayısı (daha fazla = daha iyi öğrenme ama daha yavaş)
+    'n_estimators': 500,         # Ağaç sayısı (daha fazla = daha iyi öğrenme ama daha yavaş)
     'max_depth': 7,              # Ağaç derinliği (daha derin = daha karmaşık model)
     'learning_rate': 0.1,        # Öğrenme hızı (düşük = daha iyi genelleme ama daha yavaş)
     'random_state': 42,          # Tekrarlanabilirlik için

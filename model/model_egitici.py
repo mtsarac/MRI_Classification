@@ -625,8 +625,12 @@ class ModelEgitici:
         
         return random_search.best_params_
     
-    def confusion_matrix_ciz(self, y_true, y_pred, dosya_adi: str = "confusion_matrix.png"):
+    def confusion_matrix_ciz(self, y_true, y_pred, dosya_adi: str = None):
         """Karışıklık matrisi çiz ve kaydet."""
+        if dosya_adi is None:
+            zaman_damgasi = datetime.now().strftime('%Y%m%d_%H%M%S')
+            dosya_adi = f"confusion_matrix_{self.model_tipi}_{zaman_damgasi}.png"
+        
         cm = confusion_matrix(y_true, y_pred)
         # Hücre anotasyonlarına TP / FN-FP etiketlerini ekle
         annot_labels = []
@@ -701,13 +705,18 @@ class ModelEgitici:
         ax.invert_yaxis()
         plt.tight_layout()
         
-        kayit_yolu = GORSELLER_KLASORU / f"ozellik_onemi_{self.model_tipi}.png"
+        zaman_damgasi = datetime.now().strftime('%Y%m%d_%H%M%S')
+        kayit_yolu = GORSELLER_KLASORU / f"ozellik_onemi_{self.model_tipi}_{zaman_damgasi}.png"
         fig.savefig(kayit_yolu, dpi=GORSEL_AYARLARI['dpi'], bbox_inches='tight')
         plt.close()
         print(f"   ✓ Özellik önemi grafiği kaydedildi: {kayit_yolu}")
     
-    def roc_curve_ciz(self, X_test, y_test, dosya_adi: str = "roc_curves.png"):
+    def roc_curve_ciz(self, X_test, y_test, dosya_adi: str = None):
         """ROC eğrilerini çiz (multi-class için one-vs-rest)."""
+        if dosya_adi is None:
+            zaman_damgasi = datetime.now().strftime('%Y%m%d_%H%M%S')
+            dosya_adi = f"roc_curves_{self.model_tipi}_{zaman_damgasi}.png"
+        
         if not hasattr(self.model, 'predict_proba'):
             print(f"   ⚠️  ROC eğrisi sadece olasılık tahminini destekleyen modeller için çizilebilir")
             return
@@ -760,8 +769,12 @@ class ModelEgitici:
         except Exception as e:
             print(f"   ⚠️  ROC eğrisi çizilemedi: {e}")
     
-    def precision_recall_curve_ciz(self, X_test, y_test, dosya_adi: str = "precision_recall_curves.png"):
+    def precision_recall_curve_ciz(self, X_test, y_test, dosya_adi: str = None):
         """Precision-Recall eğrilerini çiz (multi-class için one-vs-rest)."""
+        if dosya_adi is None:
+            zaman_damgasi = datetime.now().strftime('%Y%m%d_%H%M%S')
+            dosya_adi = f"precision_recall_curves_{self.model_tipi}_{zaman_damgasi}.png"
+        
         if not hasattr(self.model, 'predict_proba'):
             print(f"   ⚠️  Precision-Recall eğrisi sadece olasılık tahminini destekleyen modeller için çizilebilir")
             return
